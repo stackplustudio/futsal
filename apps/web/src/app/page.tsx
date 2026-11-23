@@ -145,6 +145,14 @@ export default function Home() {
 
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
+              href="/sparring"
+              className="inline-flex h-9 items-center gap-1.5 px-3 rounded-lg border border-brand-line bg-brand-surface text-xs font-medium text-brand-ink-dark hover:bg-brand-surface-alt transition-colors duration-150"
+            >
+              <Users className="size-3.5 text-brand-primary" />
+              <span>Sparring</span>
+            </Link>
+
+            <Link
               href="/dashboard/pos"
               className="inline-flex h-9 items-center gap-1.5 px-3 rounded-lg border border-brand-line bg-brand-surface text-xs font-medium text-brand-ink-dark hover:bg-brand-surface-alt transition-colors duration-150"
             >

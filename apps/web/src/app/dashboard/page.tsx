@@ -13,6 +13,8 @@ import {
   MapPin,
   CheckCircle2,
   Calendar,
+  BarChart3,
+  ShieldCheck,
 } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 
@@ -87,12 +89,36 @@ export default function Dashboard() {
       btnColor: 'bg-amber-600 hover:bg-amber-700 text-white',
     },
     {
+      title: 'Laporan & Analitik Venue',
+      code: 'FR-005 Analytics',
+      badge: 'Okupansi & Omzet',
+      description:
+        'Laporan persentase okupansi lapangan, breakdown jam prime-time vs reguler, omzet gabungan sewa + kantin, dan rekap tutup shift kasir.',
+      icon: BarChart3,
+      link: '/dashboard/reports',
+      btnText: 'Buka Laporan Bisnis',
+      color: 'border-purple-200 bg-purple-50/40 text-purple-700',
+      btnColor: 'bg-purple-600 hover:bg-purple-700 text-white',
+    },
+    {
+      title: 'Papan Cari Lawan Sparring',
+      code: 'FR-005 Matchmaking',
+      badge: 'Komunitas Resmi',
+      description:
+        'Papan cari kawan sparring komunitas: level casual/fun match vs kompetitif, pembagian patungan sewa 50:50, dan kepatuhan privasi kontak UU PDP.',
+      icon: Users,
+      link: '/sparring',
+      btnText: 'Buka Papan Sparring',
+      color: 'border-cyan-200 bg-cyan-50/40 text-cyan-700',
+      btnColor: 'bg-cyan-600 hover:bg-cyan-700 text-white',
+    },
+    {
       title: 'Manajemen Staf & Hak Akses',
       code: 'Security Guard',
       badge: 'RBAC',
       description:
         'Kelola akun pengguna, staf kasir, manajer operasional, dan akun pemilik venue (Venue Owner & Super Admin).',
-      icon: Users,
+      icon: ShieldCheck,
       link: '/dashboard/users',
       btnText: 'Kelola Pengguna',
       color: 'border-slate-200 bg-slate-50 text-slate-700',
@@ -164,10 +190,22 @@ export default function Dashboard() {
 
           <div className="flex items-center gap-2">
             <Link
+              href="/dashboard/reports"
+              className="px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 text-xs font-bold transition-colors"
+            >
+              Laporan
+            </Link>
+            <Link
+              href="/dashboard/pos"
+              className="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition-colors"
+            >
+              Kasir POS
+            </Link>
+            <Link
               href="/"
               className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition-colors"
             >
-              Lihat Web Publik
+              Web Publik
             </Link>
           </div>
         </div>
