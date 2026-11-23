@@ -14,6 +14,8 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PosModule } from './pos/pos.module';
 import { MembersModule } from './members/members.module';
+import { SparringModule } from './sparring/sparring.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -45,6 +47,8 @@ import { MembersModule } from './members/members.module';
     PaymentsModule,
     PosModule,
     MembersModule,
+    SparringModule,
+    ReportsModule,
   ],
   providers: [
     {
