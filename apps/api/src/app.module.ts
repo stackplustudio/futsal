@@ -6,6 +6,10 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
+import { VenuesModule } from './venues/venues.module';
+import { CourtsModule } from './courts/courts.module';
+import { PricingModule } from './pricing/pricing.module';
+import { BookingsModule } from './bookings/bookings.module';
 
 @Module({
   imports: [
@@ -29,6 +33,10 @@ import { HealthModule } from './health/health.module';
     UsersModule,
     PrismaModule,
     HealthModule,
+    VenuesModule,
+    CourtsModule,
+    PricingModule,
+    BookingsModule,
   ],
   providers: [
     {
