@@ -1,294 +1,307 @@
+import Link from 'next/link';
 import {
-  ArrowDown,
+  Clock,
+  CreditCard,
+  Users,
+  ShoppingBag,
+  BarChart3,
   ArrowRight,
-  Blocks,
-  Braces,
-  Database,
-  GitBranch,
-  ShieldCheck,
-  Workflow,
-} from "lucide-react";
-
-const stack = [
-  {
-    name: "Web",
-    detail: "Next.js 16 App Router",
-    icon: Blocks,
-    accent: "bg-brand-primary/10 text-brand-primary",
-  },
-  {
-    name: "API",
-    detail: "NestJS 11 REST API",
-    icon: Braces,
-    accent: "bg-brand-surface-alt text-brand-ink-dark",
-  },
-  {
-    name: "Data",
-    detail: "Prisma + PostgreSQL",
-    icon: Database,
-    accent: "bg-brand-primary/10 text-brand-primary",
-  },
-];
-
-const capabilities = [
-  {
-    title: "Monorepo terstruktur",
-    detail:
-      "pnpm workspaces dan Turborepo menyatukan web, API, dan package database dalam satu alur kerja.",
-    icon: Workflow,
-  },
-  {
-    title: "Security berlapis",
-    detail:
-      "JWT, JwtAuthGuard, RolesGuard, Helmet, rate limiting, validasi DTO, dan CORS terkontrol.",
-    icon: ShieldCheck,
-  },
-  {
-    title: "Data dengan Prisma",
-    detail:
-      "Schema PostgreSQL dan Prisma Client dikelola bersama; aplikasi memakai pooled URL dan migration URL terpisah.",
-    icon: Database,
-  },
-  {
-    title: "Quality dan rilis",
-    detail:
-      "Jest, API E2E, Playwright, k6, lint, typecheck, dan GitHub Actions mendukung pemeriksaan sebelum deploy.",
-    icon: GitBranch,
-  },
-];
+  Sparkles,
+  Smartphone,
+  CheckCircle2,
+  Trophy,
+} from 'lucide-react';
 
 export default function Home() {
+  const features = [
+    {
+      icon: Clock,
+      title: 'Anti Double-Booking & Atomic Lock',
+      description:
+        'Sistem penguncian slot otomatis selama 15 menit saat pemain memproses pembayaran DP. Menjamin nol risiko tabrakan jadwal antar pemesan.',
+      badge: 'Real-Time Concurrency',
+    },
+    {
+      icon: CreditCard,
+      title: 'Anti No-Show Payment Gateway',
+      description:
+        'Wajib uang muka (DP 50% atau flat) via QRIS & Virtual Account Midtrans. Hilangkan kerugian venue akibat tim yang ghosting di jam sibuk.',
+      badge: 'Midtrans Ready',
+    },
+    {
+      icon: Sparkles,
+      title: 'Smart Dynamic Pricing Engine',
+      description:
+        'Penetapan harga otomatis berdasarkan jam sewa: Siang hemat, Sore normal, dan Malam Prime-Time, serta pembedaan tarif Weekday vs Weekend.',
+      badge: 'Otomatis',
+    },
+    {
+      icon: ShoppingBag,
+      title: 'Kasir Kantin & Sewa Alat (Integrated POS)',
+      description:
+        'Resepsionis dapat menggabungkan pelunasan sewa lapangan dengan pesanan minuman botol dan sewa rompi tim dalam satu invoice struk kasir.',
+      badge: 'All-in-One POS',
+    },
+    {
+      icon: Users,
+      title: 'Papan Cari Lawan Sparring',
+      description:
+        'Tim yang sudah booking dapat membuka status tantangan sparring dengan level santai hingga kompetitif untuk memperluas komunitas venue.',
+      badge: 'Fitur Komunitas',
+    },
+    {
+      icon: BarChart3,
+      title: 'Laporan Okupansi & Tutup Kasir',
+      description:
+        'Analisis persentase jam terisi per lapangan, rekap omzet sewa vs kantin, dan verifikasi fisik uang laci saat pergantian shift kasir.',
+      badge: 'Financial Audit',
+    },
+  ];
+
+  const highlights = [
+    'Pemesanan publik instan 90 detik via mobile (tanpa wajib unduh aplikasi)',
+    'Proteksi multi-tenant & hak akses berjenjang (Owner, Manager, Cashier, Player)',
+    'Kalkulasi tarif proporsional per jam dengan desimal pembulatan nol',
+    'Struk thermal kasir 58mm/80mm & integrasi bukti booking WhatsApp',
+  ];
+
   return (
-    <main className="min-h-screen overflow-hidden bg-brand-background text-brand-ink-dark">
-      <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-5 lg:px-10">
-        <a
-          className="flex items-center gap-3 font-semibold tracking-tight"
-          href="#top"
-          aria-label="StackPlus Core, kembali ke atas"
-        >
-          <span className="grid size-10 place-items-center rounded-xl bg-brand-primary text-lg font-black text-white">
-            +
-          </span>
-          <span>
-            STACKPLUS
-            <span className="ml-2 text-xs font-medium tracking-[0.18em] text-brand-ink">
-              CORE
+    <div className="min-h-screen bg-[#FDFBF7] text-[#1E293B] antialiased selection:bg-[#0053F1] selection:text-white">
+      {/* ── Top Navigation ───────────────────────────────────────────────────── */}
+      <nav className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="size-9 rounded-xl bg-[#0053F1] text-white flex items-center justify-center font-black shadow-md shadow-blue-500/20">
+              <Trophy className="size-5" />
+            </div>
+            <div>
+              <span className="font-extrabold text-base tracking-tight text-slate-900 block leading-tight">
+                StackPlus <span className="text-[#0053F1]">Futsal</span>
+              </span>
+              <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider block">
+                Venue & Court Management SaaS
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <Link
+              href="/dashboard"
+              className="hidden sm:inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            >
+              Masuk Dashboard
+            </Link>
+            <Link
+              href="/book/champion-arena"
+              className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-bold bg-[#0053F1] hover:bg-blue-700 active:bg-blue-800 text-white shadow-sm transition-all shadow-blue-500/20"
+            >
+              Coba Booking Demo
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* ── Hero Section ─────────────────────────────────────────────────────── */}
+      <section className="relative pt-12 pb-20 sm:pt-20 sm:pb-28 overflow-hidden">
+        {/* Subtle background glow */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 size-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200/70 text-[#0053F1] text-xs font-semibold mb-6">
+            <Sparkles className="size-3.5" />
+            <span>Next-Gen Futsal & Mini Soccer Operating System</span>
+          </div>
+
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.15] mb-6">
+            Tingkatkan Okupansi Venue,{' '}
+            <span className="text-[#0053F1] underline decoration-[#0053F1]/30 underline-offset-8">
+              Bebas Ghosting & Tabrakan Jadwal
             </span>
-          </span>
-        </a>
-        <nav aria-label="Navigasi utama" className="hidden items-center gap-8 text-sm md:flex">
-          <a className="transition hover:text-brand-primary" href="#architecture">
-            Arsitektur
-          </a>
-          <a className="transition hover:text-brand-primary" href="#capabilities">
-            Fitur inti
-          </a>
-          <a className="transition hover:text-brand-primary" href="#getting-started">
-            Mulai
-          </a>
-        </nav>
-        <a
-          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-brand-line bg-white px-5 text-sm font-semibold transition hover:border-brand-primary hover:text-brand-primary"
-          href="#getting-started"
-        >
-          Mulai jelajahi <ArrowRight aria-hidden="true" size={16} />
-        </a>
-      </header>
-
-      <section
-        id="top"
-        className="mx-auto grid w-full max-w-7xl gap-14 px-6 pb-20 pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-10 lg:pb-28 lg:pt-24"
-      >
-        <div>
-          <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-line bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-brand-ink">
-            <span className="size-2 rounded-full bg-brand-primary" />
-            Stack Plus Studio · Core Engine
-          </p>
-          <h1 className="max-w-3xl text-5xl font-bold leading-[1.08] tracking-tight sm:text-6xl lg:text-7xl">
-            Fondasi full-stack untuk{" "}
-            <span className="text-brand-primary">mulai dengan benar.</span>
           </h1>
-          <p className="mt-7 max-w-xl text-base leading-7 text-brand-ink sm:text-lg">
-            Satu monorepo untuk frontend Next.js, backend NestJS, dan database
-            Prisma. Mulai dari blueprint yang sudah memiliki autentikasi,
-            pengelolaan user, serta quality checks.
+
+          <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed">
+            Platform SaaS all-in-one untuk pemilik venue futsal & mini soccer:
+            reservasi online mobile 90-detik, penguncian DP instan anti no-show,
+            tarif dinamis malam prime-time, serta kasir POS kantin dalam satu struk.
           </p>
-          <div className="mt-9 flex flex-wrap items-center gap-4">
-            <a
-              className="inline-flex min-h-12 items-center gap-2 rounded-full bg-brand-primary px-6 text-sm font-semibold text-white transition hover:bg-brand-primary-dark"
-              href="#architecture"
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-md mx-auto">
+            <Link
+              href="/book/champion-arena"
+              className="w-full sm:w-auto min-h-[48px] px-7 py-3 rounded-xl bg-[#0053F1] hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm shadow-lg shadow-blue-600/25 transition-all flex items-center justify-center gap-2 group"
             >
-              Lihat arsitektur <ArrowDown aria-hidden="true" size={16} />
-            </a>
-            <a
-              className="inline-flex min-h-12 items-center gap-2 rounded-full border border-brand-line bg-white px-6 text-sm font-semibold transition hover:border-brand-primary hover:text-brand-primary"
-              href="#capabilities"
+              <span>Demo Booking Pemain (Live)</span>
+              <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="w-full sm:w-auto min-h-[48px] px-6 py-3 rounded-xl bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-800 font-bold text-sm border border-slate-200 shadow-sm transition-all flex items-center justify-center gap-2"
             >
-              Lihat fitur inti <ArrowRight aria-hidden="true" size={16} />
-            </a>
+              <span>Dashboard Pengelola</span>
+            </Link>
+          </div>
+
+          {/* Social proof chips */}
+          <div className="mt-12 pt-8 border-t border-slate-200/60 grid grid-cols-2 sm:grid-cols-4 gap-4 text-left">
+            <div>
+              <div className="text-2xl font-extrabold text-slate-900">&lt; 90 Detik</div>
+              <div className="text-xs text-slate-500 font-medium">Kecepatan Booking Pemain</div>
+            </div>
+            <div>
+              <div className="text-2xl font-extrabold text-emerald-600">0 Insiden</div>
+              <div className="text-xs text-slate-500 font-medium">Bentrok Double-Booking</div>
+            </div>
+            <div>
+              <div className="text-2xl font-extrabold text-[#0053F1]">15 Menit</div>
+              <div className="text-xs text-slate-500 font-medium">Atomic Slot Lock Window</div>
+            </div>
+            <div>
+              <div className="text-2xl font-extrabold text-slate-900">1 Invoice</div>
+              <div className="text-xs text-slate-500 font-medium">Sewa Lapangan + Kantin POS</div>
+            </div>
           </div>
         </div>
+      </section>
 
-        <div className="relative">
-          <div
-            aria-hidden="true"
-            className="absolute -right-12 -top-12 size-52 rounded-full bg-brand-primary/10 blur-3xl"
-          />
-          <div className="relative rounded-3xl border border-brand-line bg-white p-6 shadow-xl shadow-gray-200/50 sm:p-8">
-            <div className="mb-8 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-ink">
-                  System overview
-                </p>
-                <p className="mt-1 text-lg font-semibold">Satu alur, tiga lapisan</p>
-              </div>
-              <span className="rounded-full bg-brand-surface-alt px-3 py-1.5 text-xs font-medium text-brand-ink">
-                TypeScript
-              </span>
-            </div>
-            <div className="space-y-3">
-              {stack.map(({ name, detail, icon: Icon, accent }, index) => (
+      {/* ── Feature Grid Section ─────────────────────────────────────────────── */}
+      <section className="py-16 bg-white border-y border-slate-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#0053F1] block mb-2">
+              Fitur Lengkap Sesuai PRD v1.0
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Dirancang Khusus untuk Kebiasaan Industri Futsal Indonesia
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((item, idx) => {
+              const Icon = item.icon;
+              return (
                 <div
-                  key={name}
-                  className="flex items-center gap-4 rounded-2xl border border-brand-line bg-brand-surface p-4"
+                  key={idx}
+                  className="bg-[#FDFBF7] p-6 rounded-2xl border border-slate-200/80 hover:border-blue-300 hover:shadow-md transition-all flex flex-col justify-between"
                 >
-                  <span className={`grid size-12 shrink-0 place-items-center rounded-xl ${accent}`}>
-                    <Icon aria-hidden="true" size={22} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold">{name}</p>
-                    <p className="mt-0.5 text-sm text-brand-ink">{detail}</p>
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="size-11 rounded-xl bg-blue-100/70 text-[#0053F1] flex items-center justify-center">
+                        <Icon className="size-5" />
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-200/70 text-slate-700">
+                        {item.badge}
+                      </span>
+                    </div>
+
+                    <h3 className="text-base font-bold text-slate-900 mb-2">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {item.description}
+                    </p>
                   </div>
-                  <span className="text-xs font-medium text-brand-ink">
-                    0{index + 1}
-                  </span>
                 </div>
-              ))}
-            </div>
-            <div className="mt-5 flex items-center gap-3 rounded-xl bg-brand-surface-alt px-4 py-3 text-sm text-brand-ink">
-              <span className="size-2 rounded-full bg-brand-primary" />
-              Satu repo · satu pipeline · siap dikembangkan
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      <section id="architecture" className="border-y border-brand-line bg-white">
-        <div className="mx-auto grid w-full max-w-7xl gap-10 px-6 py-16 lg:grid-cols-[0.75fr_1.25fr] lg:px-10 lg:py-20">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-primary">
-              Arsitektur
-            </p>
-            <h2 className="mt-4 max-w-md text-3xl font-bold tracking-tight sm:text-4xl">
-              Batas yang jelas, alur yang mudah diikuti.
-            </h2>
-            <p className="mt-4 max-w-md leading-7 text-brand-ink">
-              Turborepo mengorkestrasi aplikasi dan package workspace. Browser
-              mengakses web; web memakai Axios untuk berkomunikasi dengan REST
-              API; API mengakses PostgreSQL melalui Prisma.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {[
-              ["apps/web", "Antarmuka Next.js dan route dashboard."],
-              ["apps/api", "REST API NestJS, auth, users, dan health."],
-              ["packages/database", "Schema PostgreSQL dan Prisma Client bersama."],
-            ].map(([name, detail]) => (
-              <article
-                key={name}
-                className="rounded-2xl border border-brand-line bg-brand-surface p-5"
-              >
-                <p className="font-mono text-sm font-semibold text-brand-primary">
-                  {name}
+      {/* ── Interactive Demo Preview Callout ─────────────────────────────────── */}
+      <section className="py-16 bg-[#FDFBF7]">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="bg-[#1E293B] text-white rounded-3xl p-8 sm:p-12 shadow-xl relative overflow-hidden">
+            <div className="absolute -right-16 -bottom-16 size-72 bg-[#0053F1]/20 rounded-full blur-2xl" />
+
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+              <div>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-400 uppercase tracking-wider mb-3">
+                  <Smartphone className="size-3.5" /> Antarmuka Mobile-First
+                </span>
+                <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-4">
+                  Coba Alur Reservasi Mandiri Pemain Sekarang
+                </h3>
+                <p className="text-sm text-slate-300 leading-relaxed mb-6">
+                  Uji coba matriks ketersediaan slot 24 jam, pilih jam malam prime-time,
+                  dan saksikan perhitungan DP 50% serta countdown penguncian 15 menit secara real-time.
                 </p>
-                <p className="mt-3 text-sm leading-6 text-brand-ink">{detail}</p>
-              </article>
-            ))}
-          </div>
-          <div className="rounded-2xl border border-brand-line bg-brand-surface-alt px-5 py-4 lg:col-span-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-ink">
-              Request flow
-            </p>
-            <p className="mt-2 font-mono text-xs leading-6 text-brand-ink-dark sm:text-sm">
-              Browser → apps/web → Axios + REST/JWT → apps/api → Prisma →
-              PostgreSQL
-            </p>
-          </div>
-        </div>
-      </section>
 
-      <section
-        id="capabilities"
-        className="mx-auto w-full max-w-7xl px-6 py-16 lg:px-10 lg:py-20"
-      >
-        <div className="max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-primary">
-            Di dalam core
-          </p>
-          <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-            Fondasi teknis yang bisa dipahami seluruh tim.
-          </h2>
-        </div>
-        <div className="mt-9 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {capabilities.map(({ title, detail, icon: Icon }) => (
-            <article
-              key={title}
-              className="rounded-2xl border border-brand-line bg-white p-6"
-            >
-              <span className="grid size-11 place-items-center rounded-xl bg-brand-primary/10 text-brand-primary">
-                <Icon aria-hidden="true" size={21} />
-              </span>
-              <h3 className="mt-5 text-lg font-semibold">{title}</h3>
-              <p className="mt-2 text-sm leading-6 text-brand-ink">{detail}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section id="getting-started" className="bg-brand-ink-dark text-white">
-        <div className="mx-auto grid w-full max-w-7xl gap-10 px-6 py-16 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:px-10 lg:py-20">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-300">
-              Mulai lokal
-            </p>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-              Jalankan fondasi dalam empat langkah.
-            </h2>
-            <p className="mt-4 max-w-md leading-7 text-white/70">
-              Siapkan PostgreSQL dan isi `.env` terlebih dahulu. Backend
-              memerlukan koneksi database dan JWT secret agar dapat berjalan.
-            </p>
-          </div>
-          <ol className="space-y-3">
-            {[
-              ["01", "pnpm install", "Pasang dependency workspace."],
-              [
-                "02",
-                "Salin .env.example → .env",
-                "Isi DATABASE_URL, DIRECT_URL, dan dua JWT secret.",
-              ],
-              ["03", "pnpm db:generate", "Generate Prisma Client."],
-              ["04", "pnpm dev", "Jalankan web dan API dalam mode development."],
-            ].map(([number, command, detail]) => (
-              <li
-                key={number}
-                className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-2xl border border-white/15 bg-white/5 p-5 sm:flex-nowrap"
-              >
-                <span className="font-mono text-sm text-blue-300">{number}</span>
-                <div className="min-w-0 flex-1">
-                  <code className="text-sm font-semibold sm:text-base">{command}</code>
-                  <p className="mt-1 text-sm text-white/65">{detail}</p>
+                <div className="space-y-2.5 mb-8 text-xs text-slate-300">
+                  {highlights.map((h, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <CheckCircle2 className="size-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <span>{h}</span>
+                    </div>
+                  ))}
                 </div>
-              </li>
-            ))}
-          </ol>
+
+                <Link
+                  href="/book/champion-arena"
+                  className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-[#0053F1] hover:bg-blue-600 text-white font-bold text-sm shadow-md transition-all gap-2"
+                >
+                  <span>Buka Demo Booking Pemain</span>
+                  <ArrowRight className="size-4" />
+                </Link>
+              </div>
+
+              {/* Mock visual card */}
+              <div className="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-5 shadow-2xl space-y-3 font-sans">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="size-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-xs font-bold text-white">Live Slot Matrix</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400">Champion Arena</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-2.5 rounded-lg bg-slate-800/80 border border-slate-700">
+                    <div className="text-slate-400 text-[10px]">17:00 – 18:00 (Sore)</div>
+                    <div className="text-white font-bold text-sm">Rp 200.000</div>
+                    <div className="text-emerald-400 text-[10px] font-semibold mt-1">● Tersedia</div>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-blue-600 text-white border border-blue-500 shadow-sm">
+                    <div className="text-blue-200 text-[10px]">19:00 – 20:00 (Malam)</div>
+                    <div className="font-extrabold text-sm">Rp 300.000</div>
+                    <div className="text-blue-100 text-[10px] font-semibold mt-1">✓ Dipilih Anda</div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/60 rounded-xl p-3 border border-slate-700/60 text-[11px] space-y-1">
+                  <div className="flex justify-between text-slate-400">
+                    <span>Durasi Sewa:</span>
+                    <span className="text-white font-medium">1 Jam (Prime-Time)</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Wajib DP (50%):</span>
+                    <span className="text-emerald-400 font-bold">Rp 150.000</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400">
+                    <span>Atomic Lock:</span>
+                    <span className="text-amber-400 font-semibold">14:59 tersisa</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <footer className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-6 py-7 text-xs text-brand-ink sm:flex-row sm:items-center sm:justify-between lg:px-10">
-        <p>Stack Plus Studio · Core Engine</p>
-        <p>Next.js · NestJS · Prisma · PostgreSQL</p>
+      {/* ── Footer ───────────────────────────────────────────────────────────── */}
+      <footer className="bg-white border-t border-slate-200 py-8 text-xs text-slate-500">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-slate-800">StackPlus Futsal SaaS</span>
+            <span>•</span>
+            <span>Product Studio Initiative</span>
+          </div>
+
+          <div>
+            Built with Next.js 16, NestJS 11, Prisma & Tailwind CSS v4.
+          </div>
+        </div>
       </footer>
-    </main>
+    </div>
   );
 }
