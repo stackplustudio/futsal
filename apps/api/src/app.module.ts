@@ -10,6 +10,8 @@ import { VenuesModule } from './venues/venues.module';
 import { CourtsModule } from './courts/courts.module';
 import { PricingModule } from './pricing/pricing.module';
 import { BookingsModule } from './bookings/bookings.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -37,6 +39,8 @@ import { BookingsModule } from './bookings/bookings.module';
     CourtsModule,
     PricingModule,
     BookingsModule,
+    NotificationsModule,
+    PaymentsModule,
   ],
   providers: [
     {
