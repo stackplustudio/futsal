@@ -8,12 +8,298 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// Akun Pengguna & Hak Akses
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String   
+  id        String    @id @default(cuid())
+  email     String    @unique
+  password  String
   name      String?
-  role      String   @default("USER")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      String    @default("PLAYER") // SUPER_ADMIN, VENUE_OWNER, VENUE_MANAGER, CASHIER, PLAYER, ADMIN
+  tenantId  String?
+  venueId   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  tenant    Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  venue     Venue?    @relation(fields: [venueId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([venueId])
+}
+
+// Akun Bisnis Pemilik Venue (Multi-Tenant)
+model Tenant {
+  id               String           @id @default(cuid())
+  businessName     String           // Contoh: "Champion Futsal Group"
+  subdomain        String           @unique // "championfutsal"
+  ownerName        String
+  ownerPhone       String
+  subscriptionPlan SubscriptionPlan @default(STARTER)
+  subscriptionEnd  DateTime?
+  isActive         Boolean          @default(true)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  users            User[]
+  venues           Venue[]
+  customers        Customer[]
+
+  @@index([subdomain])
+}
+
+enum SubscriptionPlan {
+  TRIAL
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+// Lokasi Venue Olahraga
+model Venue {
+  id               String           @id @default(cuid())
+  tenantId         String
+  name             String           // "Champion Futsal & Mini Soccer Arena"
+  slug             String           // "champion-arena"
+  phone            String
+  address          String
+  city             String           // "Jakarta Selatan"
+  latitude         Float?
+  longitude        Float?
+  timezone         String           @default("Asia/Jakarta")
+  openHour         Int              @default(7)  // Buka 07:00
+  closeHour        Int              @default(24) // Tutup 24:00
+  defaultDpPercent Int              @default(50) // Wajib DP 50%
+  isActive         Boolean          @default(true)
+  deletedAt        DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users            User[]
+  courts           Court[]
+  canteenProducts  CanteenProduct[]
+  cashierShifts    CashierShift[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+}
+
+// Lapangan Olahraga
+model Court {
+  id             String             @id @default(cuid())
+  venueId        String
+  name           String             // "Lapangan 1 - Vinyl Pro"
+  type           CourtType          // FUTSAL_VINYL, FUTSAL_SYNTHETIC, etc.
+  lengthMeters   Int?               // misal 26m
+  widthMeters    Int?               // misal 16m
+  description    String?
+  isActive       Boolean            @default(true)
+  deletedAt      DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  venue          Venue              @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  pricingRules   CourtPricingRule[]
+  bookings       Booking[]
+  recurringSlots RecurringSlot[]
+
+  @@index([venueId])
+}
+
+enum CourtType {
+  FUTSAL_VINYL
+  FUTSAL_SYNTHETIC
+  FUTSAL_INTERLOCK
+  MINI_SOCCER_OUTDOOR
+  MINI_SOCCER_INDOOR
+}
+
+// Aturan Tarif Dinamis Lapangan
+model CourtPricingRule {
+  id         String   @id @default(cuid())
+  courtId    String
+  dayType    DayType  @default(WEEKDAY)
+  startHour  Int      // 7 s.d. 23
+  endHour    Int      // 8 s.d. 24
+  hourlyRate BigInt   // Tarif sewa per jam (Rupiah bulat)
+
+  court      Court    @relation(fields: [courtId], references: [id], onDelete: Cascade)
+
+  @@index([courtId, dayType])
+}
+
+enum DayType {
+  WEEKDAY // Senin - Jumat
+  WEEKEND // Sabtu, Minggu, Libur Nasional
+}
+
+// Profil Pelanggan & Kapten Tim
+model Customer {
+  id              String           @id @default(cuid())
+  tenantId        String
+  fullName        String
+  phone           String           // WhatsApp
+  email           String?
+  teamName        String?          // Nama Tim Futsal
+  totalBookings   Int              @default(0)
+  createdAt       DateTime         @default(now())
+
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bookings        Booking[]
+  memberContracts MemberContract[]
+
+  @@unique([tenantId, phone])
+  @@index([tenantId, phone])
+}
+
+// Transaksi Reservasi Lapangan
+model Booking {
+  id             String         @id @default(cuid())
+  courtId        String
+  customerId     String
+  bookingCode    String         @unique // "BK-FUT-2611-001"
+  bookingType    BookingType    @default(ONLINE_PUBLIC)
+  status         BookingStatus  @default(PENDING_PAYMENT)
+  bookingDate    DateTime       @db.Date
+  startTime      DateTime       // UTC Timestamp
+  endTime        DateTime       // UTC Timestamp
+  durationHours  Int            // 1, 2, 3 jam
+  courtTotal     BigInt         // Total sewa lapangan
+  canteenTotal   BigInt         @default(0) // Total pesanan kantin
+  grandTotal     BigInt         // Total keseluruhan
+  depositAmount  BigInt         @default(0) // DP yang sudah dibayar
+  remainingDue   BigInt         // Sisa tagihan pelunasan
+  paymentMethod  PaymentMethod?
+  paidAt         DateTime?
+  isOpenSparring Boolean        @default(false)
+  sparringLevel  String?        // "Casual", "Kompetitif"
+  notes          String?
+  deletedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  court          Court          @relation(fields: [courtId], references: [id], onDelete: Cascade)
+  customer       Customer       @relation(fields: [customerId], references: [id])
+  canteenOrders  CanteenOrder[]
+
+  @@index([courtId, bookingDate])
+  @@index([courtId, startTime, endTime])
+  @@index([bookingCode])
+}
+
+enum BookingType {
+  ONLINE_PUBLIC
+  WALK_IN
+  MEMBER_ROUTINE
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT // Menunggu bayar DP (Lock 15 menit)
+  CONFIRMED       // Sudah bayar DP / Lunas
+  PLAYING         // Sedang bermain di lapangan
+  COMPLETED       // Selesai & Lunas kasir
+  CANCELLED       // Dibatalkan
+  NO_SHOW         // Tim tidak hadir (DP hangus)
+  EXPIRED         // Gagal bayar dalam batas waktu
+}
+
+enum PaymentMethod {
+  MIDTRANS_QRIS
+  MIDTRANS_VA
+  CASH_AT_COUNTER
+  EDC_DEBIT
+}
+
+// Produk Kantin & Persewaan Alat
+model CanteenProduct {
+  id         String          @id @default(cuid())
+  venueId    String
+  sku        String
+  name       String          // "Pocari Sweat 500ml", "Sewa Rompi (1 Set)"
+  category   CanteenCategory
+  price      BigInt          // Harga jual
+  costPrice  BigInt          // Modal kulakan
+  stock      Int             @default(0)
+  deletedAt  DateTime?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  venue      Venue           @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  orderItems CanteenOrder[]
+
+  @@index([venueId, category])
+}
+
+enum CanteenCategory {
+  BEVERAGE
+  SNACK
+  EQUIPMENT_RENTAL
+}
+
+model CanteenOrder {
+  id        String         @id @default(cuid())
+  bookingId String
+  productId String
+  qty       Int
+  price     BigInt
+  subtotal  BigInt
+
+  booking   Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  product   CanteenProduct @relation(fields: [productId], references: [id])
+
+  @@index([bookingId])
+}
+
+// Kontrak Member Rutin Komunitas
+model MemberContract {
+  id            String          @id @default(cuid())
+  customerId    String
+  courtId       String
+  dayOfWeek     Int             // 1 = Senin, 4 = Kamis
+  startHour     Int             // misal 20 (jam 20:00)
+  durationHours Int             @default(2)
+  startDate     DateTime        @db.Date
+  endDate       DateTime        @db.Date
+  monthlyFee    BigInt
+  isActive      Boolean         @default(true)
+  deletedAt     DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  customer      Customer        @relation(fields: [customerId], references: [id])
+  slots         RecurringSlot[]
+
+  @@index([customerId])
+}
+
+model RecurringSlot {
+  id         String         @id @default(cuid())
+  contractId String
+  courtId    String
+  date       DateTime       @db.Date
+  startHour  Int
+  endHour    Int
+
+  contract   MemberContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  court      Court          @relation(fields: [courtId], references: [id], onDelete: Cascade)
+
+  @@unique([courtId, date, startHour])
+}
+
+// Sesi Tutup Kasir Resepsionis
+model CashierShift {
+  id               String    @id @default(cuid())
+  venueId          String
+  openedById       String
+  closedById       String?
+  openedAt         DateTime  @default(now())
+  closedAt         DateTime?
+  startingCash     BigInt    // Kas awal laci kasir
+  actualCashEnding BigInt?   // Uang fisik saat tutup
+  systemCashTotal  BigInt?   // Hitungan transaksi tunai sistem
+  notes            String?
+
+  venue            Venue     @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@index([venueId, openedAt])
 }
