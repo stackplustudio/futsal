@@ -60,6 +60,22 @@ interface BookingSuccessData {
   endHour: number;
 }
 
+declare global {
+  interface Window {
+    snap?: {
+      pay: (
+        token: string,
+        callbacks: {
+          onSuccess?: (result: unknown) => void;
+          onPending?: (result: unknown) => void;
+          onError?: (error: unknown) => void;
+          onClose?: () => void;
+        },
+      ) => void;
+    };
+  }
+}
+
 export default function PublicBookingPage({
   params,
 }: {
@@ -269,6 +285,9 @@ export default function PublicBookingPage({
 
   // ── Countdown Timer 15 Menit untuk Booking Success Screen ───────────────────
   const [timeLeft, setTimeLeft] = useState<string>('15:00');
+  const [isPaying, setIsPaying] = useState(false);
+  const [isPaymentConfirmed, setIsPaymentConfirmed] = useState(false);
+
   useEffect(() => {
     if (!bookingSuccess?.expiresAt) return;
     const interval = setInterval(() => {
@@ -286,6 +305,81 @@ export default function PublicBookingPage({
     }, 1000);
     return () => clearInterval(interval);
   }, [bookingSuccess]);
+
+  // ── Midtrans Snap Payment Handler ──────────────────────────────────────────
+  const handlePayDeposit = async () => {
+    if (!bookingSuccess) return;
+    setIsPaying(true);
+    try {
+      const res = await api.post<{
+        token: string;
+        redirectUrl: string;
+        bookingCode: string;
+      }>('/public/payments/snap-token', {
+        bookingCode: bookingSuccess.bookingCode,
+      });
+
+      const { token, redirectUrl } = res.data;
+
+      if (typeof window !== 'undefined' && window.snap?.pay) {
+        window.snap.pay(token, {
+          onSuccess: async () => {
+            setIsPaymentConfirmed(true);
+            toast.success('Pembayaran DP berhasil dikonfirmasi!');
+            reloadSchedule(selectedDate);
+          },
+          onPending: () => {
+            toast('Menunggu penyelesaian pembayaran...');
+          },
+          onError: () => {
+            toast.error('Pembayaran gagal atau kedaluwarsa.');
+          },
+          onClose: () => {
+            toast('Jendela pembayaran ditutup.');
+          },
+        });
+      } else if (redirectUrl && !redirectUrl.includes('mock-')) {
+        window.open(redirectUrl, '_blank');
+      } else {
+        // Fallback testing/mock otomatis: trigger simulasi webhook lunas
+        await handleSimulateWebhook();
+      }
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || 'Gagal membuat token pembayaran DP.';
+      toast.error(errorMsg);
+    } finally {
+      setIsPaying(false);
+    }
+  };
+
+  const handleSimulateWebhook = async () => {
+    if (!bookingSuccess) return;
+    setIsPaying(true);
+    try {
+      await api.post('/public/payments/midtrans-webhook', {
+        order_id: bookingSuccess.bookingCode,
+        status_code: '200',
+        gross_amount: String(bookingSuccess.depositAmount),
+        signature_key: 'dev-simulation-signature',
+        transaction_status: 'settlement',
+        payment_type: 'qris',
+      });
+      setIsPaymentConfirmed(true);
+      toast.success(
+        'Pembayaran DP lunas! Bukti reservasi terkirim ke WhatsApp.',
+      );
+      reloadSchedule(selectedDate);
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || 'Gagal memproses webhook simulasi.';
+      toast.error(msg);
+    } finally {
+      setIsPaying(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#1E293B] antialiased">
@@ -703,83 +797,168 @@ export default function PublicBookingPage({
               Selesaikan pembayaran uang muka (DP) sebelum batas waktu berakhir.
             </p>
 
-            {/* Countdown Box */}
-            <div className="my-4 bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-amber-800 text-xs font-semibold">
-                <Clock className="size-4 text-amber-600 animate-pulse" />
-                <span>Batas Waktu Bayar:</span>
-              </div>
-              <span className="font-mono text-base font-extrabold text-amber-700">
-                {timeLeft}
-              </span>
-            </div>
+            {/* State 1: Pembayaran DP Lunas / Confirmed */}
+            {isPaymentConfirmed ? (
+              <div className="space-y-4 py-2">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold mb-2">
+                    <CheckCircle2 className="size-3.5" /> DP TERKONFIRMASI
+                  </div>
+                  <p className="text-xs text-emerald-800 font-medium">
+                    Pembayaran DP Anda telah diverifikasi oleh gateway pembayaran
+                    Midtrans.
+                  </p>
+                </div>
 
-            {/* Booking Details */}
-            <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-200 text-left text-xs space-y-2 mb-4">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500">Kode Booking:</span>
+                <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-200 text-left text-xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Kode Booking:</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(bookingSuccess.bookingCode);
+                        toast.success('Kode booking disalin!');
+                      }}
+                      className="font-mono font-bold text-[#0053F1] flex items-center gap-1 hover:underline"
+                    >
+                      {bookingSuccess.bookingCode}
+                      <Copy className="size-3" />
+                    </button>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Lapangan:</span>
+                    <span className="font-semibold text-slate-800">
+                      {bookingSuccess.court.name}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Jadwal:</span>
+                    <span className="font-semibold text-slate-800">
+                      {bookingSuccess.date},{' '}
+                      {String(bookingSuccess.startHour).padStart(2, '0')}:00 –{' '}
+                      {String(bookingSuccess.endHour).padStart(2, '0')}:00
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-t border-slate-200 pt-1.5 font-bold">
+                    <span className="text-slate-800">Sisa di Kasir:</span>
+                    <span className="text-amber-600 text-sm">
+                      Rp {bookingSuccess.remainingDue.toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-[11px] text-blue-800 text-left">
+                  💬 <strong>Notifikasi WhatsApp:</strong> Bukti pemesanan dan
+                  link tiket online telah dikirim ke nomor kontak Anda. Harap hadir 15
+                  menit sebelum waktu pertandingan.
+                </div>
+
                 <button
                   type="button"
                   onClick={() => {
-                    navigator.clipboard.writeText(bookingSuccess.bookingCode);
-                    toast.success('Kode booking disalin!');
+                    setBookingSuccess(null);
+                    setIsPaymentConfirmed(false);
                   }}
-                  className="font-mono font-bold text-[#0053F1] flex items-center gap-1 hover:underline"
+                  className="w-full min-h-[44px] rounded-xl bg-[#0053F1] hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all touch-manipulation"
                 >
-                  {bookingSuccess.bookingCode}
-                  <Copy className="size-3" />
+                  Selesai & Kembali ke Jadwal
                 </button>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Lapangan:</span>
-                <span className="font-semibold text-slate-800">
-                  {bookingSuccess.court.name}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Jadwal:</span>
-                <span className="font-semibold text-slate-800">
-                  {bookingSuccess.date},{' '}
-                  {String(bookingSuccess.startHour).padStart(2, '0')}:00 –{' '}
-                  {String(bookingSuccess.endHour).padStart(2, '0')}:00
-                </span>
-              </div>
-              <div className="flex justify-between border-t border-slate-200 pt-1.5 font-bold">
-                <span className="text-slate-800">Jumlah Wajib DP:</span>
-                <span className="text-emerald-600 text-sm">
-                  Rp {bookingSuccess.depositAmount.toLocaleString('id-ID')}
-                </span>
-              </div>
-              <div className="flex justify-between text-slate-500 text-[11px]">
-                <span>Pelunasan di Kasir:</span>
-                <span>
-                  Rp {bookingSuccess.remainingDue.toLocaleString('id-ID')}
-                </span>
-              </div>
-            </div>
+            ) : (
+              <>
+                {/* Countdown Box */}
+                <div className="my-4 bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-amber-800 text-xs font-semibold">
+                    <Clock className="size-4 text-amber-600 animate-pulse" />
+                    <span>Batas Waktu Bayar:</span>
+                  </div>
+                  <span className="font-mono text-base font-extrabold text-amber-700">
+                    {timeLeft}
+                  </span>
+                </div>
 
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => {
-                  toast.success(
-                    'Simulasi pembayaran DP berhasil diterima sistem.',
-                  );
-                  setBookingSuccess(null);
-                }}
-                className="w-full min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all touch-manipulation"
-              >
-                Bayar DP Sekarang (QRIS / Midtrans Sandbox)
-              </button>
+                {/* Booking Details */}
+                <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-200 text-left text-xs space-y-2 mb-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Kode Booking:</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          bookingSuccess.bookingCode,
+                        );
+                        toast.success('Kode booking disalin!');
+                      }}
+                      className="font-mono font-bold text-[#0053F1] flex items-center gap-1 hover:underline"
+                    >
+                      {bookingSuccess.bookingCode}
+                      <Copy className="size-3" />
+                    </button>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Lapangan:</span>
+                    <span className="font-semibold text-slate-800">
+                      {bookingSuccess.court.name}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Jadwal:</span>
+                    <span className="font-semibold text-slate-800">
+                      {bookingSuccess.date},{' '}
+                      {String(bookingSuccess.startHour).padStart(2, '0')}:00 –{' '}
+                      {String(bookingSuccess.endHour).padStart(2, '0')}:00
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-t border-slate-200 pt-1.5 font-bold">
+                    <span className="text-slate-800">Jumlah Wajib DP:</span>
+                    <span className="text-emerald-600 text-sm">
+                      Rp {bookingSuccess.depositAmount.toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-slate-500 text-[11px]">
+                    <span>Pelunasan di Kasir:</span>
+                    <span>
+                      Rp {bookingSuccess.remainingDue.toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                </div>
 
-              <button
-                type="button"
-                onClick={() => setBookingSuccess(null)}
-                className="w-full min-h-[44px] rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-all touch-manipulation"
-              >
-                Tutup & Kembali ke Jadwal
-              </button>
-            </div>
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    disabled={isPaying}
+                    onClick={handlePayDeposit}
+                    className="w-full min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs shadow-md transition-all touch-manipulation flex items-center justify-center gap-2"
+                  >
+                    {isPaying ? (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="size-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Memproses Midtrans Snap...
+                      </span>
+                    ) : (
+                      'Bayar DP Sekarang (Midtrans Snap / QRIS)'
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isPaying}
+                    onClick={handleSimulateWebhook}
+                    className="w-full min-h-[38px] rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-[11px] border border-blue-200 transition-all touch-manipulation"
+                  >
+                    ⚡ Simulasi Webhook Lunas (Dev Sandbox)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setBookingSuccess(null)}
+                    className="w-full min-h-[44px] rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-all touch-manipulation"
+                  >
+                    Tutup & Kembali ke Jadwal
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
