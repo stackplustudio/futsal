@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, use } from 'react';
+import Image from 'next/image';
 import { api } from '@/lib/axios';
 import toast, { Toaster } from 'react-hot-toast';
 import {
@@ -10,8 +11,12 @@ import {
   Phone,
   CheckCircle2,
   Copy,
-  ChevronRight,
   Sparkles,
+  X,
+  Maximize2,
+  Ruler,
+  Zap,
+  ChevronRight,
 } from 'lucide-react';
 
 interface HourlySlot {
@@ -76,6 +81,270 @@ declare global {
   }
 }
 
+// ── Mock Court Details (gambar dan info statis per tipe lapangan) ─────────────
+const COURT_MOCK_DATA: Record<
+  string,
+  {
+    images: string[];
+    description: string;
+    features: string[];
+    dimensions?: string;
+    surface: string;
+    capacity: string;
+  }
+> = {
+  FUTSAL_VINYL: {
+    images: [
+      'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?w=800&q=80',
+      'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&q=80',
+    ],
+    description:
+      'Lapangan futsal premium dengan lantai vinyl interlock anti-slip yang lembut di kaki. Cocok untuk pertandingan kompetitif maupun latihan rutin.',
+    features: [
+      'Lantai Vinyl Interlock Anti-Slip',
+      'Lampu LED 500W Full Bright',
+      'Net Gawang Standar Internasional',
+      'AC Sirkulasi Udara',
+      'CCTV 24 Jam',
+    ],
+    dimensions: '26m × 16m',
+    surface: 'Vinyl Interlock',
+    capacity: '5 vs 5',
+  },
+  FUTSAL_SYNTHETIC: {
+    images: [
+      'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=800&q=80',
+      'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&q=80',
+    ],
+    description:
+      'Rumput sintetis monofilamen tebal dengan infill pasir silika dan rubber granule. Sensasi bermain menyerupai lapangan rumput alami dengan perawatan minimal.',
+    features: [
+      'Rumput Sintetis Monofilamen 50mm',
+      'Infill Pasir Silika + Rubber Granule',
+      'Lampu LED 1000W Stadium',
+      'Tribun Mini Penonton',
+      'Ruang Ganti Lengkap',
+    ],
+    dimensions: '28m × 18m',
+    surface: 'Rumput Sintetis',
+    capacity: '5 vs 5',
+  },
+  FUTSAL_INTERLOCK: {
+    images: [
+      'https://images.unsplash.com/photo-1543357486-54d4a8f0a50d?w=800&q=80',
+    ],
+    description: 'Lapangan futsal dengan lantai interlock modular yang kokoh.',
+    features: ['Lantai Interlock Modular', 'Lampu LED', 'Gawang Standar'],
+    dimensions: '25m × 16m',
+    surface: 'Interlock',
+    capacity: '5 vs 5',
+  },
+  MINI_SOCCER_OUTDOOR: {
+    images: [
+      'https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=800&q=80',
+      'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&q=80',
+    ],
+    description:
+      'Lapangan mini soccer outdoor berukuran besar dengan pencahayaan lampu LED stadium 1000W. Ideal untuk turnamen 7 vs 7 dan komunitas sepak bola.',
+    features: [
+      'Rumput Sintetis Outdoor Weatherproof',
+      'Lampu LED Stadium 1000W × 4 Tiang',
+      'Gawang Full Size Mini Soccer',
+      'Tribun Penonton Kapasitas 50 Org',
+      'Parkir Luas',
+      'Toilet & Musholla',
+    ],
+    dimensions: '50m × 30m',
+    surface: 'Rumput Sintetis Outdoor',
+    capacity: '7 vs 7',
+  },
+  MINI_SOCCER_INDOOR: {
+    images: [
+      'https://images.unsplash.com/photo-1540747913346-19212a4efe8e?w=800&q=80',
+    ],
+    description: 'Lapangan mini soccer indoor ber-AC dengan pencahayaan optimal.',
+    features: ['Indoor Ber-AC', 'Lampu LED', 'Rumput Sintetis', 'Tribun Mini'],
+    dimensions: '45m × 28m',
+    surface: 'Rumput Sintetis Indoor',
+    capacity: '7 vs 7',
+  },
+};
+
+function getCourtMock(courtType: string) {
+  const key = courtType.replace('FUTSAL_', 'FUTSAL_').replace('MINI_SOCCER_', 'MINI_SOCCER_');
+  return COURT_MOCK_DATA[key] || COURT_MOCK_DATA['FUTSAL_VINYL'];
+}
+
+function formatCourtType(type: string): string {
+  return type
+    .replace('FUTSAL_', '')
+    .replace('MINI_SOCCER_', 'MINI SOCCER ')
+    .replace('_', ' ');
+}
+
+// ── Court Detail Modal ────────────────────────────────────────────────────────
+function CourtDetailModal({
+  court,
+  isSelected,
+  onSelect,
+  onClose,
+}: {
+  court: CourtSchedule;
+  isSelected: boolean;
+  onSelect: () => void;
+  onClose: () => void;
+}) {
+  const mock = getCourtMock(court.courtType);
+  const [activeImg, setActiveImg] = useState(0);
+
+  const availableCount = court.slots.filter((s) => s.status === 'AVAILABLE').length;
+  const minRate = court.slots.reduce((min, s) => (s.rate < min ? s.rate : min), Infinity);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl max-h-[90dvh] overflow-y-auto shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header Image */}
+        <div className="relative h-52">
+          <Image
+            src={mock.images[activeImg]}
+            alt={court.courtName}
+            fill
+            className="object-cover rounded-t-3xl sm:rounded-t-2xl"
+          />
+          {/* Close Button */}
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-3 right-3 size-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+          >
+            <X className="size-4" />
+          </button>
+          {/* Image Thumbnails */}
+          {mock.images.length > 1 && (
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {mock.images.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setActiveImg(idx)}
+                  className={`size-2 rounded-full transition-all ${
+                    idx === activeImg ? 'bg-white scale-125' : 'bg-white/50'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+          {/* Type Badge */}
+          <span className="absolute top-3 left-3 bg-[#0053F1] text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
+            {formatCourtType(court.courtType)}
+          </span>
+        </div>
+
+        {/* Content */}
+        <div className="p-5 space-y-4">
+          <div>
+            <h2 className="text-lg font-extrabold text-slate-900">{court.courtName}</h2>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">{mock.description}</p>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { icon: Ruler, label: 'Ukuran', value: mock.dimensions || '-' },
+              { icon: Zap, label: 'Kapasitas', value: mock.capacity },
+              { icon: Clock, label: 'Tersedia', value: `${availableCount} Slot` },
+            ].map(({ icon: Icon, label, value }) => (
+              <div
+                key={label}
+                className="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100"
+              >
+                <Icon className="size-4 text-[#0053F1] mx-auto mb-1" />
+                <div className="text-[11px] text-slate-500">{label}</div>
+                <div className="text-xs font-bold text-slate-800 mt-0.5">{value}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Surface & Min Rate */}
+          <div className="flex items-center justify-between bg-blue-50 rounded-xl p-3 border border-blue-100">
+            <div>
+              <div className="text-[11px] text-blue-600 font-semibold">Permukaan Lapangan</div>
+              <div className="text-sm font-bold text-blue-900">{mock.surface}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[11px] text-blue-600 font-semibold">Mulai Dari</div>
+              <div className="text-sm font-bold text-blue-900">
+                Rp {minRate === Infinity ? '-' : minRate.toLocaleString('id-ID')}/jam
+              </div>
+            </div>
+          </div>
+
+          {/* Features */}
+          <div>
+            <div className="text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide">
+              Fasilitas & Keunggulan
+            </div>
+            <div className="grid grid-cols-1 gap-1.5">
+              {mock.features.map((f) => (
+                <div key={f} className="flex items-center gap-2 text-xs text-slate-700">
+                  <span className="size-4 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 font-bold">
+                    ✓
+                  </span>
+                  {f}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Thumbnail Strip (kalau lebih dari 1 gambar) */}
+          {mock.images.length > 1 && (
+            <div className="flex gap-2">
+              {mock.images.map((src, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setActiveImg(idx)}
+                  className={`flex-1 h-16 rounded-xl overflow-hidden border-2 transition-all ${
+                    idx === activeImg
+                      ? 'border-[#0053F1] opacity-100'
+                      : 'border-transparent opacity-60 hover:opacity-80'
+                  }`}
+                >
+                  <div className="relative w-full h-full">
+                    <Image src={src} alt="" fill className="object-cover" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* CTA */}
+          <button
+            type="button"
+            onClick={() => {
+              onSelect();
+              onClose();
+            }}
+            className={`w-full min-h-[50px] rounded-xl font-bold text-sm shadow-md transition-all touch-manipulation ${
+              isSelected
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                : 'bg-[#0053F1] hover:bg-blue-700 text-white'
+            }`}
+          >
+            {isSelected ? '✓ Lapangan Ini Sudah Dipilih' : 'Pilih Lapangan Ini & Lihat Jadwal'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function PublicBookingPage({
   params,
 }: {
@@ -99,6 +368,8 @@ export default function PublicBookingPage({
   const [showFormModal, setShowFormModal] = useState<boolean>(false);
   const [bookingSuccess, setBookingSuccess] =
     useState<BookingSuccessData | null>(null);
+  // Court detail modal state
+  const [detailCourt, setDetailCourt] = useState<CourtSchedule | null>(null);
 
   // Form states
   const [customerName, setCustomerName] = useState<string>('');
@@ -448,41 +719,109 @@ export default function PublicBookingPage({
           </div>
         </section>
 
-        {/* ── 2. Lapangan (Courts) Tab Pills ─────────────────────────────────── */}
+        {/* ── 2. Court Cards – Pilih Lapangan ──────────────────────────────── */}
         {scheduleData && scheduleData.courts.length > 0 && (
-          <section className="mb-4">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 block">
-              Pilih Lapangan
-            </label>
-            <div className="flex gap-2 overflow-x-auto pb-1">
+          <section className="mb-5">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                Pilih Lapangan
+              </label>
+              <span className="text-[11px] text-slate-400">
+                {scheduleData.courts.length} lapangan tersedia
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3">
               {scheduleData.courts.map((court) => {
                 const isSelected =
                   (selectedCourtId || currentCourt?.courtId) === court.courtId;
+                const mock = getCourtMock(court.courtType);
+                const availableSlots = court.slots.filter(
+                  (s) => s.status === 'AVAILABLE',
+                ).length;
+                const minRate = court.slots.reduce(
+                  (min, s) => (s.rate > 0 && s.rate < min ? s.rate : min),
+                  Infinity,
+                );
+
                 return (
-                  <button
+                  <div
                     key={court.courtId}
-                    type="button"
-                    onClick={() => {
-                      setSelectedCourtId(court.courtId);
-                      setSelectedHours([]);
-                    }}
-                    className={`min-h-[44px] px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap border transition-all touch-manipulation flex items-center gap-2 ${
+                    className={`rounded-2xl border-2 overflow-hidden transition-all shadow-sm ${
                       isSelected
-                        ? 'bg-[#1E293B] text-white border-[#1E293B] shadow-sm'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                        ? 'border-[#0053F1] shadow-blue-100 shadow-md'
+                        : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
-                    <span>{court.courtName}</span>
-                    <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded font-normal ${
-                        isSelected
-                          ? 'bg-white/20 text-white'
-                          : 'bg-slate-100 text-slate-600'
+                    {/* Court Image */}
+                    <div className="relative h-32 overflow-hidden">
+                      <Image
+                        src={mock.images[0]}
+                        alt={court.courtName}
+                        fill
+                        className="object-cover"
+                      />
+                      {/* Type badge */}
+                      <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+                        {formatCourtType(court.courtType)}
+                      </span>
+                      {/* Slot counter */}
+                      <span
+                        className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          availableSlots > 5
+                            ? 'bg-emerald-500 text-white'
+                            : availableSlots > 0
+                              ? 'bg-amber-400 text-amber-900'
+                              : 'bg-red-500 text-white'
+                        }`}
+                      >
+                        {availableSlots > 0 ? `${availableSlots} slot` : 'Full'}
+                      </span>
+                      {/* Detail button overlay */}
+                      <button
+                        type="button"
+                        onClick={() => setDetailCourt(court)}
+                        className="absolute bottom-2 right-2 bg-white/90 hover:bg-white text-slate-700 text-[10px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shadow transition-all"
+                      >
+                        <Maximize2 className="size-3" />
+                        Detail
+                      </button>
+                    </div>
+
+                    {/* Court Info Row */}
+                    <div
+                      className={`flex items-center justify-between px-3 py-2.5 ${
+                        isSelected ? 'bg-blue-50' : 'bg-white'
                       }`}
                     >
-                      {court.courtType.replace('FUTSAL_', '').replace('_', ' ')}
-                    </span>
-                  </button>
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold text-slate-900 truncate">
+                          {court.courtName}
+                        </div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">
+                          {mock.surface} · {mock.capacity} ·{' '}
+                          {minRate === Infinity
+                            ? '-'
+                            : `Rp ${minRate.toLocaleString('id-ID')}/jam`}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedCourtId(court.courtId);
+                          setSelectedHours([]);
+                        }}
+                        className={`ml-3 shrink-0 min-h-[36px] px-4 rounded-xl text-xs font-bold transition-all touch-manipulation ${
+                          isSelected
+                            ? 'bg-[#0053F1] text-white shadow-md'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        }`}
+                      >
+                        {isSelected ? '✓ Dipilih' : 'Pilih'}
+                      </button>
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -961,6 +1300,21 @@ export default function PublicBookingPage({
             )}
           </div>
         </div>
+      )}
+
+      {/* ── Court Detail Modal ────────────────────────────────────────────── */}
+      {detailCourt && (
+        <CourtDetailModal
+          court={detailCourt}
+          isSelected={
+            (selectedCourtId || currentCourt?.courtId) === detailCourt.courtId
+          }
+          onSelect={() => {
+            setSelectedCourtId(detailCourt.courtId);
+            setSelectedHours([]);
+          }}
+          onClose={() => setDetailCourt(null)}
+        />
       )}
     </div>
   );
