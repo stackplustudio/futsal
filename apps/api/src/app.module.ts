@@ -12,6 +12,8 @@ import { PricingModule } from './pricing/pricing.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentsModule } from './payments/payments.module';
+import { PosModule } from './pos/pos.module';
+import { MembersModule } from './members/members.module';
 
 @Module({
   imports: [
@@ -41,6 +43,8 @@ import { PaymentsModule } from './payments/payments.module';
     BookingsModule,
     NotificationsModule,
     PaymentsModule,
+    PosModule,
+    MembersModule,
   ],
   providers: [
     {
